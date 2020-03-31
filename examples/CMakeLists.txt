@@ -2,11 +2,7 @@ macro(mahi_gui_example target)
     # create executable
     add_executable(${target} "ex_${target}.cpp" my_icon.rc)
     # set dependencies
-if(CMAKE_SYSTEM MATCHES "Linux")
-    target_link_libraries(${target} mahi::gui GL mahi::util)
-else()
     target_link_libraries(${target} mahi::gui)
-endif()
     # add install rule
     install(TARGETS ${target}
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -21,7 +17,6 @@ mahi_gui_example(files)
 mahi_gui_example(likert)
 mahi_gui_example(events)
 mahi_gui_example(msd)
-mahi_gui_example(nvg)
 mahi_gui_example(hidden)
 mahi_gui_example(log_window)
 mahi_gui_example(opengl)
@@ -35,8 +30,20 @@ mahi_gui_example(plots_dnd)
 mahi_gui_example(shapes)
 mahi_gui_example(transparent)
 
-if(NOT CMAKE_SYSTEM MATCHES "Linux")
-    if (MAHI_UTIL_COROUTINES)
-        mahi_gui_example(coroutines)
-    endif()
+
+mahi_gui_example(nvg)
+target_sources(nvg PUBLIC "${CMAKE_SOURCE_DIR}/3rdparty/nanovg/example/demo.c")
+target_include_directories(nvg PUBLIC "${CMAKE_SOURCE_DIR}/3rdparty/nanovg/example")
+add_custom_command(TARGET nvg POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/3rdparty/nanovg/example/images" $<TARGET_FILE_DIR:nvg>/images)
+add_custom_command(TARGET nvg POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/3rdparty/nanovg/example/entypo.ttf" $<TARGET_FILE_DIR:nvg>)
+add_custom_command(TARGET nvg POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/3rdparty/nanovg/example/NotoEmoji-Regular.ttf" $<TARGET_FILE_DIR:nvg>)
+add_custom_command(TARGET nvg POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/3rdparty/nanovg/example/Roboto-Regular.ttf" $<TARGET_FILE_DIR:nvg>)
+add_custom_command(TARGET nvg POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/3rdparty/nanovg/example/Roboto-Bold.ttf" $<TARGET_FILE_DIR:nvg>)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES Clang AND WIN32)
+    # Clang on Windows won't compile coroutines
+elseif(CMAKE_SYSTEM MATCHES "Linux")
+    # Only GCC? Need to confirm
+elseif(MAHI_UTIL_COROUTINES)
+    mahi_gui_example(coroutines)
 endif()
