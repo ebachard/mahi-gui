@@ -4,8 +4,6 @@
 
 cmake_minimum_required(VERSION 3.13.0)
 
-
-
 #===============================================================================
 # USER OPTIONS
 #===============================================================================
@@ -22,7 +20,6 @@ endif()
 
 # create project
 project(mahi-gui VERSION 1.0.0 LANGUAGES C CXX)
-
 
 set(CXX_CMAKE_STANDARD 14)
 set(CXX_CMAKE_STANDARD_REQUIRED ON)
@@ -42,7 +39,7 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake")
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     if(CMAKE_SYSTEM MATCHES "Linux")
-        set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DLinux -DIMGUI_IMPL_OPENGL_LOADER_GLAD  -std=c++14") # ALL WARNINGS
+        set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++14") # ALL WARNINGS
     endif()
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3") # ALL WARNINGS
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -92,10 +89,6 @@ set(IMGUI_SRC
 )
 set(IMGUI_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/imgui)
 
-if(CMAKE_SYSTEM MATCHES "Linux")
-    set(IMGUI_INCLUD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/glad)
-endif()
-
 # NANOVG
 add_subdirectory(3rdparty/nanovg)
 install(TARGETS nanovg EXPORT mahi-gui-targets LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -128,15 +121,10 @@ install(TARGETS gui EXPORT mahi-gui-targets LIBRARY DESTINATION ${CMAKE_INSTALL_
 set_target_properties(gui PROPERTIES OUTPUT_NAME "mahi-gui")
 
 # defines
-target_compile_definitions(gui PUBLIC MAHI_GUI) # for compatibility checks
+target_compile_definitions(gui PUBLIC MAHI_GUI IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 # add source files
-
-if(CMAKE_SYSTEM MATCHES "Linux")
-    add_subdirectory(src/Mahi/Gui)
-else()
-    add_subdirectory(src/mahi/gui)
-endif()
+add_subdirectory(src/Mahi/Gui)
 
 target_sources(gui PRIVATE ${IMGUI_SRC} ${IMGUI_HEADERS})
 
@@ -160,19 +148,10 @@ target_link_libraries(gui PUBLIC glad)
 target_link_libraries(gui PUBLIC nanovg)
 target_link_libraries(gui PUBLIC clipper)
 target_link_libraries(gui PUBLIC nfd)
-
 if(CMAKE_SYSTEM MATCHES "Linux")
-
-find_package(GLEW REQUIRED)
-    if (GLEW_FOUND)
-        include_directories(${GLEW_INCLUDE_DIRS})
-        message(STATUS "${GLEW_LIBRARIES} ${GLEW_INCLUDE_DIRS}")
-    endif()
-
-    # Reminder : https://techoverflow.net/2019/04/17/how-to-fix-gcc-undefined-reference-to-std-experimental-filesystem/
-    target_link_libraries(gui PUBLIC  GL ${GLEW_LIBRARIES} mahi::gui stdc++fs)
+    # https://techoverflow.net/2019/04/17/how-to-fix-gcc-undefined-reference-to-std-experimental-filesystem/
+    target_link_libraries(gui PUBLIC GL stdc++fs)
 endif()
-
 #===============================================================================
 # EXAMPLE EXECUTABLES
 #===============================================================================
